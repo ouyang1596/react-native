@@ -1,0 +1,3 @@
+rootProject.name = 'seeWorld'
+
+include ':app'
