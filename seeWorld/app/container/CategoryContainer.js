@@ -18,6 +18,9 @@ export default class Category extends Component {
       <View style={styles.container}></View>
     );
   }
+  componentDidMount() {
+    console.log("componentDidMount");
+  }
 }
 const styles = StyleSheet.create({
   container: {

@@ -9,6 +9,7 @@ import {
     SectionList,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import ItemCell from '../container/ItemCell';
 export default class Main extends Component {
     static navigationOptions = {
         title: '首页',
@@ -19,6 +20,7 @@ export default class Main extends Component {
     constructor(props) {
         super(props);
         this.state = { discounts: [{ key: '大护法' }] };
+        console.disableYellowBox = true;
     }
     get = () => {
         return new Promise((resolve, reject) => {
@@ -64,10 +66,10 @@ export default class Main extends Component {
         const { navigate } = this.props.navigation;
         return (
             <View style={flatListStyles.container}>
-                <Text style={flatListStyles.item} onPress={this.get}>fetch请求</Text>
                 <FlatList
                     data={this.state.discounts}
-                    renderItem={({ item }) => <Text style={flatListStyles.item}>{item.title}</Text>}
+                    // renderItem={({ item }) => <Text style={flatListStyles.item}>{item.title}</Text>}
+                    renderItem={({ item }) => <ItemCell data={item}></ItemCell>}
                 />
             </View>
             // <View style={styles.container}>
@@ -83,6 +85,10 @@ export default class Main extends Component {
             //     />
             // </View >
         );
+    }
+    componentDidMount() {
+        this.get();
+        console.log("componentDidMount");
     }
 }
 

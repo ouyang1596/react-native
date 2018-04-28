@@ -13,6 +13,7 @@ import {
 import { StackNavigator, TabNavigator } from 'react-navigation';
 import CategoryContainer from './container/CategoryContainer';
 import MainContainer from './container/MainContainer';
+import ItemCell from './container/ItemCell';
 import Splash from './container/Splash';
 const tabNavi = TabNavigator({
   main: { screen: MainContainer },
@@ -39,9 +40,9 @@ const stackNavi = StackNavigator({
   Splash: { screen: Splash },
   Home: {
     screen: tabNavi,
-    // navigationOptions: {
-    //   headerLeft: null
-    // }
+    navigationOptions: {
+      headerLeft: null
+    }
   },
   Category: { screen: CategoryContainer },
 }, {
@@ -56,5 +57,6 @@ const stackNavi = StackNavigator({
       },
       headerTintColor: '#fff'
     }
-  });
-export default stackNavi;
+  }
+);
+export default tabNavi;
