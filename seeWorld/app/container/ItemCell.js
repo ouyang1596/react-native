@@ -17,20 +17,22 @@ export default class Item extends Component {
     // }
     render() {
         return (
-            <View>
-                <View style={styles.root}>
-                    <Image style={styles.imagestyle} source={{ uri: this.props.data.contentImg }} />
-                    <View style={styles.container}>
-                        <Text style={styles.title}>{this.props.data.title}</Text>
-                        <View style={styles.itemContent}>
-                            <Text style={styles.userName}>{this.props.data.userName}</Text>
-                            <View style={{ flex: 1 }}></View>
-                            <Text>{moment(this.props.data.date).fromNow()}</Text>
+            <TouchableOpacity onPress={() => this.props.onPressHandle(this.props.data)}>
+                <View>
+                    <View style={styles.root}>
+                        <Image style={styles.imagestyle} source={{ uri: this.props.data.contentImg }} />
+                        <View style={styles.container}>
+                            <Text style={styles.title}>{this.props.data.title}</Text>
+                            <View style={styles.itemContent}>
+                                <Text style={styles.userName}>{this.props.data.userName}</Text>
+                                <View style={{ flex: 1 }}></View>
+                                <Text>{moment(this.props.data.date).fromNow()}</Text>
+                            </View>
                         </View>
-                    </View>
-                </View >
-                <View style={styles.divider}></View>
-            </View>
+                    </View >
+                    <View style={styles.divider}></View>
+                </View>
+            </TouchableOpacity>
         );
     }
     componentDidMount() {

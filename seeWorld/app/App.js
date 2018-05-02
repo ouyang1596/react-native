@@ -13,6 +13,7 @@ import {
 import { StackNavigator, TabNavigator } from 'react-navigation';
 import CategoryContainer from './container/CategoryContainer';
 import MainContainer from './container/MainContainer';
+import WebViewPager from './container/WebViewPager';
 import ItemCell from './container/ItemCell';
 import Splash from './container/Splash';
 const tabNavi = TabNavigator({
@@ -45,6 +46,7 @@ const stackNavi = StackNavigator({
     }
   },
   Category: { screen: CategoryContainer },
+  Web: { screen: WebViewPager },
 }, {
     headerMode: 'screen',
     navigationOptions: {
@@ -59,4 +61,4 @@ const stackNavi = StackNavigator({
     }
   }
 );
-export default tabNavi;
+export default stackNavi;
