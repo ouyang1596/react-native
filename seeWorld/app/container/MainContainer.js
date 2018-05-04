@@ -15,10 +15,12 @@ import ItemCell from '../container/ItemCell';
 import ScrollableTabView, {
     ScrollableTabBar
 } from 'react-native-scrollable-tab-view';
+import store from 'react-native-simple-store';
 const REQUEST_URL = "http://route.showapi.com/582-2?typeId=";
 const REQUEST_URL_PAGE = "&page=";
 const REQUEST_URL_SHOWAPI = "&showapi_appid=29400&showapi_sign=e7977541307547beab3e4aa033adb78f";
 let pageNo = 1;
+let mItem = {};
 export default class Main extends Component {
     static navigationOptions = {
         title: '首页',
@@ -29,13 +31,12 @@ export default class Main extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            discounts: [], tabShow: false, isLoading: true,
-            //网络请求状态
-            error: false,
-            errorInfo: "",
-            dataArray: [],
+            discounts: [],
+            tabShow: false,
+            isLoading: true,
             showFoot: 0, // 控制foot， 0：隐藏footer  1：已加载完成,没有更多数据   2 ：显示加载中
             isRefreshing: false,//下拉控制
+            item: {},
         };
         console.disableYellowBox = true;
     }
@@ -51,7 +52,7 @@ export default class Main extends Component {
     }
     get = (pageNo) => {
         return new Promise((resolve, reject) => {
-            fetch(REQUEST_URL + this.props.navigation.state.params.item.id + REQUEST_URL_PAGE + pageNo + REQUEST_URL_SHOWAPI, {
+            fetch(REQUEST_URL + mItem.id + REQUEST_URL_PAGE + pageNo + REQUEST_URL_SHOWAPI, {
                 method: 'GET',
             }).then((response) => {
                 return response.json();
@@ -70,7 +71,7 @@ export default class Main extends Component {
 
     onPress = (article) => {
         console.log("onPress = (article)");
-        const { navigate } = this.props.navigation;
+        const { navigate } = this.props.navigation;//ES6解构赋值 navigate是navigation的一部分
         navigate('Web', { article });
     };
     _renderFooter() {
@@ -134,7 +135,8 @@ export default class Main extends Component {
                     tabBarActiveTextColor="#3e9ce9"
                     tabBarInactiveTextColor="#aaaaaa"
                 >
-                    <View tabLabel={this.props.navigation.state.params.item.name} style={flatListStyles.base}>
+                    {/* this.props.navigation.state.params.item.name */}
+                    <View tabLabel={mItem.name} style={flatListStyles.base}>
                         <FlatList
                             data={this.state.discounts}
                             // renderItem={({ item }) => <Text style={flatListStyles.item}>{item.title}</Text>}
@@ -222,7 +224,10 @@ export default class Main extends Component {
         // );
     }
     componentDidMount() {
-        this.get(pageNo);
+        store.get('item').then((item) => {
+            mItem = item;
+            this.get(pageNo);
+        });
         setTimeout(() => {
             this.setState({
                 tabShow: true

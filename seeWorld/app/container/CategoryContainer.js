@@ -7,7 +7,9 @@ import {
   FlatList,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import NavigationUtil from '../utils/NavigationUtil';
 import CategoryItem from '../container/CategoryItem';
+import store from 'react-native-simple-store';
 const REQUEST_URL = "http://route.showapi.com/582-1?showapi_appid=29400&showapi_sign=e7977541307547beab3e4aa033adb78f";
 export default class Category extends Component {
   static navigationOptions = {
@@ -43,7 +45,9 @@ export default class Category extends Component {
   };
   onPress = (item) => {
     const { navigate } = this.props.navigation;
-    navigate('Home', { item });
+    // navigate('Home', { item });
+    store.save('item', item);
+    NavigationUtil.reset(this.props.navigation, 'Home');
   };
   render() {
     return (
