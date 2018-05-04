@@ -8,12 +8,17 @@ import {
     FlatList,
     SectionList,
     RefreshControl,
+    ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ItemCell from '../container/ItemCell';
 import ScrollableTabView, {
     ScrollableTabBar
 } from 'react-native-scrollable-tab-view';
+const REQUEST_URL = "http://route.showapi.com/582-2?typeId=";
+const REQUEST_URL_PAGE = "&page=";
+const REQUEST_URL_SHOWAPI = "&showapi_appid=29400&showapi_sign=e7977541307547beab3e4aa033adb78f";
+let pageNo = 1;
 export default class Main extends Component {
     static navigationOptions = {
         title: '首页',
@@ -23,7 +28,15 @@ export default class Main extends Component {
     };
     constructor(props) {
         super(props);
-        this.state = { discounts: [{ key: '大护法' }] };
+        this.state = {
+            discounts: [], tabShow: false, isLoading: true,
+            //网络请求状态
+            error: false,
+            errorInfo: "",
+            dataArray: [],
+            showFoot: 0, // 控制foot， 0：隐藏footer  1：已加载完成,没有更多数据   2 ：显示加载中
+            isRefreshing: false,//下拉控制
+        };
         console.disableYellowBox = true;
     }
     getInitialState() {
@@ -33,17 +46,22 @@ export default class Main extends Component {
     }
     onRefresh = () => {
         this.setState({ isRefreshing: true });
-        this.get();
+        pageNo = 1;
+        this.get(pageNo);
     }
-    get = () => {
+    get = (pageNo) => {
         return new Promise((resolve, reject) => {
-            fetch('http://route.showapi.com/582-2?typeId=9&page=1&showapi_appid=29400&showapi_sign=e7977541307547beab3e4aa033adb78f', {
+            fetch(REQUEST_URL + this.props.navigation.state.params.item.id + REQUEST_URL_PAGE + pageNo + REQUEST_URL_SHOWAPI, {
                 method: 'GET',
             }).then((response) => {
                 return response.json();
             }).then((responseData) => {
                 console.log(responseData.showapi_res_body.pagebean.contentlist);
-                this.setState({ discounts: responseData.showapi_res_body.pagebean.contentlist, isRefreshing: false });
+                this.setState({
+                    discounts: pageNo == 1 ? responseData.showapi_res_body.pagebean.contentlist : this.state.discounts.concat(responseData.showapi_res_body.pagebean.contentlist), isRefreshing: false, isLoading: false,
+                    showFoot: 0,
+                });
+
             }).catch((err) => {
                 console.error(err);
             });
@@ -55,11 +73,56 @@ export default class Main extends Component {
         const { navigate } = this.props.navigation;
         navigate('Web', { article });
     };
+    _renderFooter() {
+        if (this.state.showFoot === 1) {
+            return (
+                <View style={{ height: 30, alignItems: 'center', justifyContent: 'flex-start', }}>
+                    <Text style={{ color: '#999999', fontSize: 14, marginTop: 5, marginBottom: 5, }}>
+                        没有更多数据了
+                    </Text>
+                </View>
+            );
+        } else if (this.state.showFoot === 2) {
+            return (
+                <View style={flatListStyles.footer}>
+                    <ActivityIndicator />
+                    <Text>正在加载更多数据...</Text>
+                </View>
+            );
+        } else if (this.state.showFoot === 0) {
+            return (
+                <View style={flatListStyles.footer}>
+                    <Text></Text>
+                </View>
+            );
+        }
+    }
+    _onEndReached() {
+        //如果是正在加载中或没有更多数据了，则返回
+        if (this.state.showFoot != 0) {
+            return;
+        }
+        //如果当前页大于或等于总页数，那就是到最后一页了，返回
+        // if ((pageNo != 1) && (pageNo >= totalPage)) {
+        //     return;
+        // } else {
+        //     pageNo++;
+        // }
+        //底部显示正在加载更多数据
+        this.setState({ showFoot: 2 });
+        //获取数据
+        // this.fetchData(pageNo);
+        pageNo++;
+        this.get(pageNo);
+    }
+    _separator() {
+        return <View style={{ height: 1, backgroundColor: '#999999' }} />;
+    }
     render() {
         const { navigate } = this.props.navigation;
-        return (
-            <View style={flatListStyles.container}>
-                {/* <ScrollableTabView
+        if (this.state.tabShow) {
+            return (
+                <ScrollableTabView
                     renderTabBar={() => (
                         <ScrollableTabBar
                             tabStyle={flatListStyles.tab}
@@ -71,35 +134,7 @@ export default class Main extends Component {
                     tabBarActiveTextColor="#3e9ce9"
                     tabBarInactiveTextColor="#aaaaaa"
                 >
-                    <Text tabLabel={"科技咖"}></Text>
-                </ScrollableTabView> */}
-                <FlatList
-                    data={this.state.discounts}
-                    // renderItem={({ item }) => <Text style={flatListStyles.item}>{item.title}</Text>}
-                    renderItem={({ item }) => <ItemCell data={item} onPressHandle={this.onPress} ></ItemCell>}
-                    refreshControl={
-                        <RefreshControl
-                            style={flatListStyles.refreshControlBase}
-                            refreshing={this.state.isRefreshing}
-                            onRefresh={this.onRefresh}
-                            title="Loading..."
-                            colors={['#ffaa66cc', '#ff00ddff', '#ffffbb33', '#ffff4444']}
-                        />
-                    }
-                />
-                {/* <ScrollableTabView
-                    renderTabBar={() => (
-                        <ScrollableTabBar
-                            tabStyle={flatListStyles.tab}
-                            textStyle={flatListStyles.tabText}
-                        />
-                    )}
-                    tabBarBackgroundColor="#fcfcfc"
-                    tabBarUnderlineStyle={flatListStyles.tabBarUnderline}
-                    tabBarActiveTextColor="#3e9ce9"
-                    tabBarInactiveTextColor="#aaaaaa"
-                >
-                    <View tabLabel={"科技咖"} style={flatListStyles.base}>
+                    <View tabLabel={this.props.navigation.state.params.item.name} style={flatListStyles.base}>
                         <FlatList
                             data={this.state.discounts}
                             // renderItem={({ item }) => <Text style={flatListStyles.item}>{item.title}</Text>}
@@ -113,14 +148,86 @@ export default class Main extends Component {
                                     colors={['#ffaa66cc', '#ff00ddff', '#ffffbb33', '#ffff4444']}
                                 />
                             }
+                            ListFooterComponent={this._renderFooter.bind(this)}
+                            onEndReached={this._onEndReached.bind(this)}
+                            onEndReachedThreshold={1}
+                            ItemSeparatorComponent={this._separator}
                         />
                     </View>
-                </ScrollableTabView> */}
-            </View>
-        );
+                </ScrollableTabView>
+            );
+        } else {
+            return null;
+        }
+        // return (
+        //     <View style={flatListStyles.container}>
+        //         {/* <ScrollableTabView
+        //             renderTabBar={() => (
+        //                 <ScrollableTabBar
+        //                     tabStyle={flatListStyles.tab}
+        //                     textStyle={flatListStyles.tabText}
+        //                 />
+        //             )}
+        //             tabBarBackgroundColor="#fcfcfc"
+        //             tabBarUnderlineStyle={flatListStyles.tabBarUnderline}
+        //             tabBarActiveTextColor="#3e9ce9"
+        //             tabBarInactiveTextColor="#aaaaaa"
+        //         >
+        //             <Text tabLabel={"科技咖"}></Text>
+        //         </ScrollableTabView> */}
+        //         {/* <FlatList
+        //             data={this.state.discounts}
+        //             // renderItem={({ item }) => <Text style={flatListStyles.item}>{item.title}</Text>}
+        //             renderItem={({ item }) => <ItemCell data={item} onPressHandle={this.onPress} ></ItemCell>}
+        //             refreshControl={
+        //                 <RefreshControl
+        //                     style={flatListStyles.refreshControlBase}
+        //                     refreshing={this.state.isRefreshing}
+        //                     onRefresh={this.onRefresh}
+        //                     title="Loading..."
+        //                     colors={['#ffaa66cc', '#ff00ddff', '#ffffbb33', '#ffff4444']}
+        //                 />
+        //             }
+        //         /> */}
+        //         <ScrollableTabView
+        //             renderTabBar={() => (
+        //                 <ScrollableTabBar
+        //                     tabStyle={flatListStyles.tab}
+        //                     textStyle={flatListStyles.tabText}
+        //                 />
+        //             )}
+        //             tabBarBackgroundColor="#fcfcfc"
+        //             tabBarUnderlineStyle={flatListStyles.tabBarUnderline}
+        //             tabBarActiveTextColor="#3e9ce9"
+        //             tabBarInactiveTextColor="#aaaaaa"
+        //         >
+        //             <View tabLabel={"科技咖"} style={flatListStyles.base}>
+        //                 <FlatList
+        //                     data={this.state.discounts}
+        //                     // renderItem={({ item }) => <Text style={flatListStyles.item}>{item.title}</Text>}
+        //                     renderItem={({ item }) => <ItemCell data={item} onPressHandle={this.onPress} ></ItemCell>}
+        //                     refreshControl={
+        //                         <RefreshControl
+        //                             style={flatListStyles.refreshControlBase}
+        //                             refreshing={this.state.isRefreshing}
+        //                             onRefresh={this.onRefresh}
+        //                             title="Loading..."
+        //                             colors={['#ffaa66cc', '#ff00ddff', '#ffffbb33', '#ffff4444']}
+        //                         />
+        //                     }
+        //                 />
+        //             </View>
+        //         </ScrollableTabView>
+        //     </View>
+        // );
     }
     componentDidMount() {
-        this.get();
+        this.get(pageNo);
+        setTimeout(() => {
+            this.setState({
+                tabShow: true
+            });
+        }, 0)
     }
 }
 
@@ -148,25 +255,12 @@ const flatListStyles = StyleSheet.create({
     tabBarUnderline: {
         backgroundColor: '#3e9ce9',
         height: 2
-    }
+    },
+    footer: {
+        flexDirection: 'row',
+        height: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
 });
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//         paddingTop: 22
-//     },
-//     sectionHeader: {
-//         paddingTop: 2,
-//         paddingLeft: 10,
-//         paddingRight: 10,
-//         paddingBottom: 2,
-//         fontSize: 14,
-//         fontWeight: 'bold',
-//         backgroundColor: 'skyblue',
-//     },
-//     item: {
-//         padding: 10,
-//         fontSize: 18,
-//         height: 44,
-//     },
-// });

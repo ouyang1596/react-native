@@ -36,7 +36,7 @@ export default class Splash extends Component {
     SplashScreen.hide();
     this.timer = setTimeout(() => {
       // navigate('Category');
-      NavigationUtil.reset(this.props.navigation, 'Home');
+      NavigationUtil.reset(this.props.navigation, 'Category');
     }, 1000);
   }
 }
