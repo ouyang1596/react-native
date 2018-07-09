@@ -21,6 +21,7 @@ const REQUEST_URL_PAGE = "&page=";
 const REQUEST_URL_SHOWAPI = "&showapi_appid=29400&showapi_sign=e7977541307547beab3e4aa033adb78f";
 let pageNo = 1;
 let mItem = {};
+let loadMoreTime = 0;
 export default class Main extends Component {
     static navigationOptions = {
         title: '首页',
@@ -58,6 +59,18 @@ export default class Main extends Component {
                 return response.json();
             }).then((responseData) => {
                 console.log(responseData.showapi_res_body.pagebean.contentlist);
+                this.state.discounts.map((item) => {
+                    // console.log("id==" + item.id);
+                    if (pageNo > 1) {
+                        //去重
+                        responseData.showapi_res_body.pagebean.contentlist.map((item2) => {
+                            console.log("id==" + item.id);
+                            if (item.id == item2.id) {
+                                responseData.showapi_res_body.pagebean.contentlist.splice(item2);
+                            }
+                        });
+                    }
+                });
                 this.setState({
                     discounts: pageNo == 1 ? responseData.showapi_res_body.pagebean.contentlist : this.state.discounts.concat(responseData.showapi_res_body.pagebean.contentlist), isRefreshing: false, isLoading: false,
                     showFoot: 0,
@@ -109,12 +122,16 @@ export default class Main extends Component {
         // } else {
         //     pageNo++;
         // }
-        //底部显示正在加载更多数据
-        this.setState({ showFoot: 2 });
-        //获取数据
-        // this.fetchData(pageNo);
-        pageNo++;
-        this.get(pageNo);
+        const time = Date.parse(new Date()) / 1000;
+        if (time - loadMoreTime > 1) {
+            //底部显示正在加载更多数据
+            this.setState({ showFoot: 2 });
+            //获取数据
+            // this.fetchData(pageNo);
+            pageNo++;
+            this.get(pageNo);
+            loadMoreTime = Date.parse(new Date()) / 1000;
+        }
     }
     _separator() {
         return <View style={{ height: 1, backgroundColor: '#999999' }} />;
@@ -139,7 +156,6 @@ export default class Main extends Component {
                     <View tabLabel={mItem.name} style={flatListStyles.base}>
                         <FlatList
                             data={this.state.discounts}
-                            // renderItem={({ item }) => <Text style={flatListStyles.item}>{item.title}</Text>}
                             renderItem={({ item }) => <ItemCell data={item} onPressHandle={this.onPress} ></ItemCell>}
                             refreshControl={
                                 <RefreshControl
@@ -153,7 +169,7 @@ export default class Main extends Component {
                             ListFooterComponent={this._renderFooter.bind(this)}
                             onEndReached={this._onEndReached.bind(this)}
                             onEndReachedThreshold={1}
-                            ItemSeparatorComponent={this._separator}
+                        // ItemSeparatorComponent={this._separator}
                         />
                     </View>
                 </ScrollableTabView>

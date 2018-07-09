@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Dimensions, Animated } from 'react-native';
 import NavigationUtil from '../utils/NavigationUtil';
 import SplashScreen from 'react-native-splash-screen';
-
+import store from 'react-native-simple-store';
 const maxHeight = Dimensions.get('window').height;
 const maxWidth = Dimensions.get('window').width;
 const splashImg = require('../img/splash.png');
@@ -36,7 +36,15 @@ export default class Splash extends Component {
     SplashScreen.hide();
     this.timer = setTimeout(() => {
       // navigate('Category');
-      NavigationUtil.reset(this.props.navigation, 'Category');
+      store.get('item').then((item) => {
+        console.log("item==" + item);
+        if (item == null) {
+          NavigationUtil.reset(this.props.navigation, 'Category');
+        } else {
+          NavigationUtil.reset(this.props.navigation, 'Home');
+        }
+      });
+
     }, 1000);
   }
 }
